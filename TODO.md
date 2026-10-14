@@ -17,20 +17,21 @@
 - [x] Difficulté progressive (facile au début, de plus en plus dur)
 
 ## Phase 2 - « Gavé stylé » (`feat/neon`)
-- [ ] Rendu néon avec halos lumineux
-- [ ] Fond étoilé en parallaxe, particules, tremblement d'écran, hit-stop
+- [x] Rendu néon avec halos lumineux
+- [x] Fond étoilé en parallaxe, particules, tremblement d'écran, hit-stop
 - [x] Météorites qui se fragmentent (fait en phase 1)
-- [ ] Bonus : tir triple, bouclier, bombe
-- [ ] Sons, musique
-- [ ] Écran titre, record sauvegardé
+- [x] Bonus : tir triple, bouclier, bombe
+- [x] Sons et musique synthétisés en code (aucun fichier audio)
+- [x] Écran titre, record sauvegardé
 
 ## Phase 3 - Le boss (`feat/boss`)
-- [ ] Alerte « WARNING », boss en 3 phases, barre de vie
-- [ ] Mort spectaculaire, cycles plus durs après le boss
+- [x] Alerte « WARNING », boss en 3 phases, barre de vie
+- [x] Mort spectaculaire, cycles plus durs après le boss (+1 vie offerte)
 
 ## Phase 4 - Publication
-- [ ] Version navigateur (pygbag), record dans le stockage du navigateur
-- [ ] README (GIF de démo, stack, commandes, crédits des assets)
-- [ ] Revue à froid
+- [x] Version navigateur (pygbag), record dans le stockage du navigateur
+- [x] README (GIF de démo, stack, commandes, crédits des assets)
+- [x] Licence MIT
+- [x] Revue à froid
 - [ ] Repo GitHub public + description + sujets (Leture)
 - [ ] Page sur teebostudio.fr

@@ -4,10 +4,12 @@ import math
 import random
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
+from astro_blaster.config import Color
 from astro_blaster.difficulty import Difficulty
+from astro_blaster.fx import neon
 from astro_blaster.geometry import random_polygon
 
 SMALL, MEDIUM, LARGE = 0, 1, 2
@@ -42,6 +44,14 @@ class Meteor:
     @property
     def score(self) -> int:
         return config.METEOR_SCORES[self.size]
+
+    @property
+    def color(self) -> Color:
+        return config.METEOR_COLORS[self.size]
+
+    @property
+    def visual_radius(self) -> float:
+        return config.METEOR_RADII[self.size]
 
     def update(self, dt: float) -> None:
         self.age += dt
@@ -85,9 +95,12 @@ class Meteor:
         return pieces
 
     def draw(self, surface: pygame.Surface) -> None:
-        color = config.METEOR_HIT_COLOR if self.flash_time > 0 else config.METEOR_COLOR
-        points = [self.position + p.rotate(self.angle) for p in self.shape]
-        pygame.draw.polygon(surface, color, points, 2)
+        color = config.METEOR_HIT_COLOR if self.flash_time > 0 else self.color
+        neon.polygon(surface, color, [self.position + p.rotate(self.angle) for p in self.shape])
+        if self.size != SMALL:
+            # Contour intérieur plus sombre : donne du volume aux grosses météorites.
+            inner = [self.position + p.rotate(-self.angle * 0.5) * 0.5 for p in self.shape]
+            pygame.draw.polygon(surface, neon.scale_color(color, 0.45), inner, 1)
 
 
 def spawn_meteors(difficulty: Difficulty, rng: random.Random) -> list[Meteor]:

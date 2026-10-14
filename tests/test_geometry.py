@@ -1,11 +1,12 @@
 import random
 
 import pytest
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster.geometry import (
     circles_overlap,
     clamp,
+    distance_to_segment,
     lerp,
     progress_between,
     random_polygon,
@@ -51,3 +52,11 @@ def test_random_polygon_is_reproducible_with_same_seed() -> None:
     first = random_polygon(random.Random(7), 20, 8, 0.3)
     second = random_polygon(random.Random(7), 20, 8, 0.3)
     assert first == second
+
+
+def test_distance_to_segment() -> None:
+    start, end = Vector2(0, 0), Vector2(10, 0)
+    assert distance_to_segment(Vector2(5, 3), start, end) == pytest.approx(3)
+    assert distance_to_segment(Vector2(-4, 3), start, end) == pytest.approx(5)  # avant le début
+    assert distance_to_segment(Vector2(13, 4), start, end) == pytest.approx(5)  # après la fin
+    assert distance_to_segment(Vector2(1, 1), start, start) == pytest.approx(2**0.5)

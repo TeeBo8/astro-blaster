@@ -1,1 +1,1 @@
-"""Les objets du jeu : vaisseau, tirs, météorites."""
+"""Les objets du jeu : vaisseau, tirs, météorites, bonus, boss."""

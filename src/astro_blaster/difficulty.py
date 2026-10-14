@@ -22,23 +22,25 @@ class Difficulty:
     burst_chance: float  # probabilité d'une rafale de petites météorites rapides
 
 
-def intensity_at(elapsed: float) -> float:
-    """Intensité après `elapsed` secondes de jeu : 0 au début, 1 à la fin de la montée."""
-    progress = max(elapsed, 0.0) / config.DIFFICULTY_RAMP_DURATION
-    if progress <= 1.0:
-        return progress**config.DIFFICULTY_CURVE_EXPONENT
-    return 1.0 + (progress - 1.0) * config.DIFFICULTY_OVERDRIVE_SLOPE
+def intensity_at(elapsed: float, cycle: int = 0) -> float:
+    """Intensité après `elapsed` secondes du cycle : 0 au début, 1 à la fin de la montée.
+
+    À partir du 2e cycle (après un boss), on ne repart plus de 0 mais d'un cran plus haut.
+    """
+    start = min(cycle * config.CYCLE_START_INTENSITY, config.CYCLE_START_INTENSITY_MAX)
+    progress = min(max(elapsed, 0.0) / config.DIFFICULTY_RAMP_DURATION, 1.0)
+    return start + (1.0 - start) * progress**config.DIFFICULTY_CURVE_EXPONENT
 
 
-def difficulty_at(elapsed: float) -> Difficulty:
-    """Tous les paramètres de la vague, à partir du temps de jeu."""
-    intensity = intensity_at(elapsed)
+def difficulty_at(elapsed: float, cycle: int = 0) -> Difficulty:
+    """Tous les paramètres de la vague, à partir du temps écoulé dans le cycle."""
+    intensity = intensity_at(elapsed, cycle)
     spawn_interval = lerp(config.SPAWN_INTERVAL_START, config.SPAWN_INTERVAL_END, intensity)
     meteor_speed = lerp(config.METEOR_SPEED_START, config.METEOR_SPEED_END, intensity)
     return Difficulty(
         intensity=intensity,
-        spawn_interval=max(spawn_interval, config.SPAWN_INTERVAL_MIN),
-        meteor_speed=min(meteor_speed, config.METEOR_SPEED_MAX),
+        spawn_interval=spawn_interval,
+        meteor_speed=meteor_speed,
         size_weights=(
             1.0,
             progress_between(intensity, *config.MEDIUM_METEOR_RAMP),

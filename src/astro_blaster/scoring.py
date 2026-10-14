@@ -27,6 +27,10 @@ class Score:
         self.points += gained
         return gained
 
+    def add_bonus(self, points: int) -> None:
+        """Points hors combo (coups sur le boss, prime de victoire…)."""
+        self.points += points
+
     def break_combo(self) -> None:
         self.combo = 0
 

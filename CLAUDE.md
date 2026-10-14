@@ -14,9 +14,17 @@ Jeu de tir spatial en Python : un vaisseau qui tire sur des météorites. Simple
 ## État au 2026-10-14
 
 - Consignes de Leture et étapes : voir `TODO.md` (shoot'em up vertical, flèches + Espace, style néon vectoriel dessiné en code, difficulté progressive, boss en 3 phases, 3 bonus)
-- Phase 1 (jeu jouable) faite et validée par Leture sur la branche `feat/jeu-jouable` ; pas encore de repo GitHub (Leture le créera)
+- Phases 1 à 3 (jeu, néon, boss) validées par Leture ; PR #1, #2, #3 empilées à fusionner dans l'ordre. Repo GitHub TeeBo8/astro-blaster créé en **privé** (Leture le passera en public)
+- Phase 4 (version navigateur, README) sur `feat/web`
 - Dépendances : `pygame-ce` ; dev : `ruff`, `pytest`
-- Organisation : réglages dans `config.py`, logique pure testée (`geometry`, `difficulty`, `scoring`), `entities/`, `scenes/` (Protocol `Scene`, `update` renvoie la scène suivante), `fx/` à venir en phase 2
+- Organisation : réglages dans `config.py`, logique pure testée (`geometry`, `difficulty`, `scoring`), `entities/`, `scenes/` (Protocol `Scene`, `update` renvoie la scène suivante), `fx/` (néon, particules, son synthétisé), `director.py` (cycles et boss)
+
+## Pièges de la version navigateur (pygbag)
+
+- Importer `from pygame import Vector2`, jamais `from pygame.math import …` : pygbag croit que `pygame.math` est un paquet PyPI
+- Les dépendances se déclarent dans le bloc PEP 723 de `web/main.py`
+- Le navigateur impose son mixeur (48 kHz) : la synthèse des sons prend quelques secondes, d'où l'écran « CHARGEMENT »
+- Tester avec le mode debug : `http://localhost:8000/#debug` affiche le terminal Python
 
 ## Stack
 
@@ -27,16 +35,18 @@ Jeu de tir spatial en Python : un vaisseau qui tire sur des météorites. Simple
 | Moteur de jeu | pygame-ce (version communautaire de pygame, plus active ; s'importe avec `import pygame`) |
 | Lint + formatage | Ruff (config dans `pyproject.toml`) |
 | Tests | pytest (logique pure : collisions, score, vagues — pas l'affichage) |
-| Version navigateur | pygbag (à ajouter le moment venu) |
+| Version navigateur | pygbag 0.9 (Python 3.12 + pygame-ce 2.5.7 en WebAssembly) |
 
 ## Commandes
 
 ```powershell
-uv run astro-blaster      # lancer le jeu
+uv run astro-blaster      # lancer le jeu (--boss : commencer juste avant le boss)
 uv run ruff check         # lint (équivalent pnpm lint)
 uv run ruff format        # formatage
 uv run pytest             # tests
 uv add <paquet>           # ajouter une dépendance (--dev pour l'outillage)
+uv run python scripts/build_web.py          # version navigateur sur http://localhost:8000
+uv run python scripts/build_web.py --build  # construit seulement : build/web-src/build/web
 ```
 
 ## Checklist avant de pousser
