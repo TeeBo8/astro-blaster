@@ -6,6 +6,7 @@ import pygame
 from pygame.math import Vector2
 
 from astro_blaster import config
+from astro_blaster.fx import neon
 
 
 @dataclass
@@ -17,9 +18,13 @@ class Bullet:
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
-        if self.position.y < -config.BULLET_LENGTH:
+        margin = config.BULLET_LENGTH
+        if not (-margin < self.position.x < config.SCREEN_WIDTH + margin) or (
+            self.position.y < -margin
+        ):
             self.alive = False
 
     def draw(self, surface: pygame.Surface) -> None:
-        tail = self.position + Vector2(0, config.BULLET_LENGTH)
-        pygame.draw.line(surface, config.BULLET_COLOR, self.position, tail, 3)
+        # Le trait suit la direction du tir (utile pour les tirs en biais du tir triple).
+        tail = self.position - self.velocity.normalize() * config.BULLET_LENGTH
+        neon.line(surface, config.BULLET_COLOR, self.position, tail)

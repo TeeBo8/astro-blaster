@@ -1,43 +1,104 @@
 """Écran de fin de partie."""
 
-from collections.abc import Callable
+import math
 
 import pygame
 
 from astro_blaster import config
+from astro_blaster.context import GameContext
+from astro_blaster.fx import neon
 from astro_blaster.scenes.base import Scene
 from astro_blaster.scoring import format_points
 
 
 class GameOverScene:
-    def __init__(self, score: int, elapsed: float, restart: Callable[[], Scene]) -> None:
+    def __init__(self, context: GameContext, score: int, elapsed: float) -> None:
+        self.context = context
         self.score = score
         self.elapsed = elapsed
-        self.restart = restart
+        self.is_record = context.submit_score(score)
         self.wait = config.GAME_OVER_INPUT_DELAY
-        self.wants_restart = False
-        self.title_font = pygame.font.Font(None, config.FONT_SIZE_TITLE)
-        self.text_font = pygame.font.Font(None, config.FONT_SIZE_TEXT)
+        self.age = 0.0
+        self.next: str | None = None
+        context.audio.play("game_over")
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and self.wait == 0:
-            self.wants_restart = True
+        if event.type != pygame.KEYDOWN or self.wait > 0:
+            return
+        if event.key == pygame.K_SPACE:
+            self.next = "play"
+        elif event.key == pygame.K_ESCAPE:
+            self.next = "title"
 
     def update(self, dt: float) -> Scene | None:
+        # Imports placés ici : play.py importe déjà ce fichier. Les mettre en haut créerait
+        # un import circulaire (A importe B qui importe A).
+        from astro_blaster.scenes.play import PlayScene
+        from astro_blaster.scenes.title import TitleScene
+
         self.wait = max(0.0, self.wait - dt)
-        return self.restart() if self.wants_restart else None
+        self.age += dt
+        self.context.starfield.update(dt)
+        if self.next == "play":
+            return PlayScene(self.context)
+        if self.next == "title":
+            return TitleScene(self.context)
+        return None
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill(config.BACKGROUND_COLOR)
+        self.context.starfield.draw(surface)
+        fonts = self.context.fonts
         center_x = config.SCREEN_WIDTH / 2
+        height = config.SCREEN_HEIGHT
         minutes, seconds = divmod(int(self.elapsed), 60)
-        lines = [
-            (self.title_font, "GAME OVER", config.METEOR_COLOR, 0.35),
-            (self.text_font, f"Score : {format_points(self.score)}", config.HUD_COLOR, 0.5),
-            (self.text_font, f"Temps : {minutes}:{seconds:02d}", config.HUD_COLOR, 0.56),
-        ]
+
+        neon.text(
+            surface, fonts.title, "GAME OVER", config.DANGER_COLOR, center=(center_x, height * 0.3)
+        )
+        neon.text(
+            surface,
+            fonts.title,
+            format_points(self.score),
+            config.HUD_COLOR,
+            center=(center_x, height * 0.45),
+        )
+        neon.text(
+            surface,
+            fonts.text,
+            f"Temps  {minutes}:{seconds:02d}",
+            config.HUD_COLOR,
+            center=(center_x, height * 0.53),
+        )
+        if self.is_record:
+            # Clignote deux fois par seconde.
+            if math.sin(self.age * 4 * math.pi) > -0.3:
+                neon.text(
+                    surface,
+                    fonts.text,
+                    "NOUVEAU RECORD !",
+                    config.ACCENT_COLOR,
+                    center=(center_x, height * 0.6),
+                )
+        else:
+            neon.text(
+                surface,
+                fonts.text,
+                f"Record  {format_points(self.context.high_score)}",
+                config.SHIP_COLOR,
+                center=(center_x, height * 0.6),
+            )
         if self.wait == 0:
-            lines.append((self.text_font, "Espace pour rejouer", config.ACCENT_COLOR, 0.72))
-        for font, text, color, height in lines:
-            image = font.render(text, True, color)
-            surface.blit(image, image.get_rect(center=(center_x, config.SCREEN_HEIGHT * height)))
+            neon.text(
+                surface,
+                fonts.text,
+                "ESPACE  rejouer",
+                config.ACCENT_COLOR,
+                center=(center_x, height * 0.76),
+            )
+            neon.text(
+                surface,
+                fonts.hud,
+                "ÉCHAP  menu",
+                config.HUD_COLOR,
+                center=(center_x, height * 0.82),
+            )
