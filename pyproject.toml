@@ -3,6 +3,8 @@ name = "astro-blaster"
 version = "0.1.0"
 description = "Jeu de tir spatial en Python (pygame-ce) : un vaisseau, des météorites, des explosions."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "TeeBo8", email = "contact@teebostudio.fr" }
 ]

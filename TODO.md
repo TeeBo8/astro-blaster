@@ -31,7 +31,7 @@
 ## Phase 4 - Publication
 - [x] Version navigateur (pygbag), record dans le stockage du navigateur
 - [x] README (GIF de démo, stack, commandes, crédits des assets)
-- [ ] Licence du code (MIT ?) à choisir par Leture
-- [ ] Revue à froid
+- [x] Licence MIT
+- [x] Revue à froid
 - [ ] Repo GitHub public + description + sujets (Leture)
 - [ ] Page sur teebostudio.fr

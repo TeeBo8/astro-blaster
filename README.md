@@ -99,4 +99,8 @@ uv run python scripts/build_web.py --build   # construit seulement (build/web-sr
 - Police [Audiowide](https://fonts.google.com/specimen/Audiowide) de Brian J. Bonislawsky (Astigmatic), sous licence SIL Open Font License 1.1 (`src/astro_blaster/assets/fonts/OFL.txt`).
 - Tout le reste (graphismes, sons, musique) est généré par le code du projet.
 
+## Licence
+
+Le code est sous licence [MIT](LICENSE) : vous pouvez le réutiliser, le modifier et le redistribuer librement, en gardant la mention de copyright. La police Audiowide garde sa propre licence (OFL, voir plus haut).
+
 Projet de [TeeBo Studio](https://teebostudio.fr).
