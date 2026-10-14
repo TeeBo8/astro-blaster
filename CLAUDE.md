@@ -13,9 +13,10 @@ Jeu de tir spatial en Python : un vaisseau qui tire sur des météorites. Simple
 
 ## État au 2026-10-14
 
-- Dossier initialisé avec `uv init --package --python 3.13` (git initialisé, aucun commit, pas encore de repo GitHub)
+- Consignes de Leture et étapes : voir `TODO.md` (shoot'em up vertical, flèches + Espace, style néon vectoriel dessiné en code, difficulté progressive, boss en 3 phases, 3 bonus)
+- Phase 1 (jeu jouable) faite et validée par Leture sur la branche `feat/jeu-jouable` ; pas encore de repo GitHub (Leture le créera)
 - Dépendances : `pygame-ce` ; dev : `ruff`, `pytest`
-- Le code n'est pas commencé : **Leture donne ses consignes en début de session** (style visuel, commandes, power-ups…). Les attendre, puis proposer une organisation du code (plan mode) avant d'écrire.
+- Organisation : réglages dans `config.py`, logique pure testée (`geometry`, `difficulty`, `scoring`), `entities/`, `scenes/` (Protocol `Scene`, `update` renvoie la scène suivante), `fx/` à venir en phase 2
 
 ## Stack
 

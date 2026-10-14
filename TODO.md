@@ -11,15 +11,15 @@
 - [x] Organisation du code validée par Leture
 
 ## Phase 1 - Jeu jouable (`feat/jeu-jouable`)
-- [ ] Fenêtre, boucle de jeu async à 60 images/s
-- [ ] Vaisseau qui se déplace et tire
-- [ ] Météorites, collisions, score, vies, game over
-- [ ] Difficulté progressive (facile au début, de plus en plus dur)
+- [x] Fenêtre, boucle de jeu async à 60 images/s
+- [x] Vaisseau qui se déplace et tire
+- [x] Météorites, collisions, score, vies, game over
+- [x] Difficulté progressive (facile au début, de plus en plus dur)
 
 ## Phase 2 - « Gavé stylé » (`feat/neon`)
 - [ ] Rendu néon avec halos lumineux
 - [ ] Fond étoilé en parallaxe, particules, tremblement d'écran, hit-stop
-- [ ] Météorites qui se fragmentent
+- [x] Météorites qui se fragmentent (fait en phase 1)
 - [ ] Bonus : tir triple, bouclier, bombe
 - [ ] Sons, musique
 - [ ] Écran titre, record sauvegardé
