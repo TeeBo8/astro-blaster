@@ -51,3 +51,13 @@ def test_limits_hold_even_after_a_very_long_game() -> None:
     endless = difficulty_at(60 * 60)
     assert endless.spawn_interval == config.SPAWN_INTERVAL_MIN
     assert endless.meteor_speed == config.METEOR_SPEED_MAX
+
+
+def test_each_cycle_starts_harder_but_still_ends_at_full_intensity() -> None:
+    assert intensity_at(0, cycle=1) > intensity_at(0, cycle=0)
+    assert intensity_at(0, cycle=2) > intensity_at(0, cycle=1)
+    assert intensity_at(config.DIFFICULTY_RAMP_DURATION, cycle=2) == pytest.approx(1)
+
+
+def test_cycle_start_intensity_is_capped() -> None:
+    assert intensity_at(0, cycle=50) == config.CYCLE_START_INTENSITY_MAX

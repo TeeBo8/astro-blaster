@@ -34,7 +34,7 @@ class TitleScene:
         self.age = 0.0
         self.flicker = 0.0
         self.start = False
-        context.audio.start_music()
+        context.audio.play_music("main")
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:

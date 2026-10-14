@@ -20,6 +20,7 @@ class GameOverScene:
         self.wait = config.GAME_OVER_INPUT_DELAY
         self.age = 0.0
         self.next: str | None = None
+        context.audio.stop_music()
         context.audio.play("game_over")
 
     def handle_event(self, event: pygame.event.Event) -> None:

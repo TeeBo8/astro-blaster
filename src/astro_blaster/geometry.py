@@ -43,3 +43,16 @@ def random_polygon(
         distance = radius * rng.uniform(1.0 - jaggedness, 1.0)
         points.append(Vector2(0, -distance).rotate(angle))
     return points
+
+
+def distance_to_segment(point: Vector2, start: Vector2, end: Vector2) -> float:
+    """Distance la plus courte entre un point et un segment (sert à toucher avec un laser).
+
+    On projette le point sur la droite du segment, puis on borne la projection aux extrémités.
+    """
+    segment = end - start
+    length_squared = segment.length_squared()
+    if length_squared == 0:
+        return point.distance_to(start)
+    t = clamp((point - start).dot(segment) / length_squared, 0.0, 1.0)
+    return point.distance_to(start + segment * t)

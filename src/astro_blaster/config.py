@@ -115,6 +115,7 @@ SAMPLE_RATE = 22050
 SFX_VOLUME = 0.55
 MUSIC_VOLUME = 0.32
 MUSIC_BPM = 118
+BOSS_MUSIC_BPM = 138
 
 # --- Vaisseau ----------------------------------------------------------------------------------
 
@@ -126,6 +127,7 @@ SHIP_TOP_LIMIT = SCREEN_HEIGHT * 0.45  # le vaisseau reste dans le bas de l'écr
 SHIP_SIDE_MARGIN = 18.0
 SHIP_MAX_TILT = 14.0  # inclinaison du dessin à pleine vitesse latérale
 SHIP_START_LIVES = 3
+SHIP_MAX_LIVES = 5  # une vie est offerte à chaque boss vaincu, jusqu'à ce maximum
 SHIP_INVINCIBLE_TIME = 2.0  # après un choc
 SHIP_BLINK_FREQUENCY = 12.0  # clignotements par seconde pendant l'invincibilité
 SHIP_FIRE_COOLDOWN = 0.16  # secondes entre deux tirs, touche maintenue
@@ -193,3 +195,59 @@ COMBO_MAX_MULTIPLIER = 5
 # --- Scènes ------------------------------------------------------------------------------------
 
 GAME_OVER_INPUT_DELAY = 0.8  # évite de relancer par erreur en tenant encore Espace
+
+# --- Cycles et boss ----------------------------------------------------------------------------
+# Un cycle = une montée de difficulté puis un boss. Chaque nouveau cycle repart plus dur.
+
+BOSS_TRIGGER_TIME = 150.0  # secondes de météorites avant l'alerte
+WARNING_DURATION = 3.5
+CYCLE_START_INTENSITY = 0.3  # intensité de départ ajoutée à chaque cycle
+CYCLE_START_INTENSITY_MAX = 0.7
+BOSS_CYCLE_SCALING = 0.35  # +35 % de vie et d'agressivité par cycle
+
+BOSS_COLOR: Color = (0, 240, 255)
+BOSS_RAGE_COLOR: Color = (255, 50, 70)
+BOSS_CORE_COLOR: Color = (255, 220, 60)
+ENEMY_BULLET_COLOR: Color = (255, 80, 200)
+BOSS_MAX_HEALTH = 140
+BOSS_PHASE_THRESHOLDS = (2 / 3, 1 / 3)  # part de vie restante où commencent les phases 2 et 3
+BOSS_ENTRY_TIME = 3.0
+BOSS_HOVER_Y = 135.0
+BOSS_SWAY = (130.0, 0.5)  # balancement latéral : (amplitude, radians par seconde)
+BOSS_RAGE_SWAY_SPEEDUP = 1.5
+BOSS_PHASE_TRANSITION_TIME = 1.6  # invulnérable et silencieux pendant qu'il change de phase
+BOSS_HIT_FLASH_TIME = 0.06
+BOSS_SCORE = 10_000
+BOSS_HIT_SCORE = 10
+BOSS_DEATH_DURATION = 3.2
+BOSS_DEATH_EXPLOSION_INTERVAL = 0.11
+BOSS_DEATH_TIME_SCALE = 0.5
+BOMB_BOSS_DAMAGE = 25
+
+ENEMY_BULLET_RADIUS = 6.0
+ENEMY_BULLET_SPEED = 230.0
+ENEMY_BULLET_MAX = 260
+
+# Phase 1 : éventails et tirs visés
+FAN_INTERVAL = 1.5
+FAN_COUNT = 7
+FAN_SPREAD = 70.0
+AIMED_INTERVAL = 2.2
+AIMED_COUNT = 3
+AIMED_SPREAD = 12.0
+# Phase 2 : spirales et tourelles
+SPIRAL_INTERVAL = 0.1
+SPIRAL_ARMS = 3
+SPIRAL_ROTATION = 95.0  # degrés par seconde
+SPIRAL_SPEED_FACTOR = 0.75
+TURRET_HEALTH = 22
+TURRET_INTERVAL = 1.7
+TURRET_SCORE = 1_000
+# Phase 3 : rage, rayon laser balayant
+LASER_COOLDOWN = 3.2
+LASER_CHARGE_TIME = 1.1  # le trait d'avertissement : le joueur a le temps de s'écarter
+LASER_FIRE_TIME = 1.7
+LASER_SWEEP = 38.0  # le rayon balaie de -SWEEP à +SWEEP degrés autour de la verticale
+LASER_WIDTH = 22.0
+LASER_LENGTH = 1000.0
+RAGE_FAN_INTERVAL = 1.1

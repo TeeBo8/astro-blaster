@@ -155,6 +155,23 @@ def make_sound_effects(synth: Synth) -> dict[str, Samples]:
             s.tone(saw, 400, 40, 0.5, 6, 0.3),
         ),
         "combo": s.sequence([s.tone(square, f, f, 0.06, 25, 0.4) for f in (880, 1320)], 0.05),
+        "enemy_shot": s.tone(triangle, 900, 500, 0.08, 30, 0.35),
+        "armor": mix(s.tone(square, 2400, 1800, 0.05, 50, 0.35), s.noise(0.03, 80, 0.9, 0.3)),
+        "boss_hit": mix(s.tone(square, 300, 180, 0.06, 40, 0.4), s.noise(0.05, 50, 0.4, 0.4)),
+        "warning": s.sequence(
+            [s.tone(square, f, f, 0.32, 1.5, 0.45) for f in (880, 660) * 3],
+            0.35,
+        ),
+        "roar": mix(
+            s.low_pass(s.tone(saw, 60, 140, 1.2, 1.5), 0.15),
+            s.noise(1.2, 2, 0.08, 0.7),
+            s.tone(square, 70, 50, 1.0, 2, 0.4),
+        ),
+        "laser_charge": s.tone(sine, 200, 1600, 1.1, 0.5, 0.6),
+        "laser_beam": mix(
+            s.low_pass(s.tone(saw, 110, 90, 1.7, 0.8), 0.3),
+            s.noise(1.7, 1, 0.3, 0.5),
+        ),
         "game_over": s.sequence(
             [s.tone(triangle, midi_to_hz(n), midi_to_hz(n), 0.35, 4) for n in (64, 60, 57, 52)],
             0.22,
@@ -163,15 +180,29 @@ def make_sound_effects(synth: Synth) -> dict[str, Samples]:
     return {name: normalize(sound, 0.9) for name, sound in effects.items()}
 
 
-# Grille d'accords de la musique (La mineur, Fa, Do, Sol) : notes MIDI de la basse.
-MUSIC_ROOTS = (45, 41, 48, 43)
 # Arpège joué au-dessus de chaque accord : intervalles depuis la note de basse.
 MINOR_ARPEGGIO = (12, 15, 19, 24, 19, 15, 12, 19)
 MAJOR_ARPEGGIO = (12, 16, 19, 24, 19, 16, 12, 19)
+# Grilles d'accords : (note MIDI de la basse, arpège). 4 accords de 2 mesures.
+MAIN_THEME = (
+    (45, MINOR_ARPEGGIO),
+    (41, MAJOR_ARPEGGIO),
+    (48, MAJOR_ARPEGGIO),
+    (43, MAJOR_ARPEGGIO),
+)
+# Thème du boss : tout en mineur, avec un demi-ton qui grince (Mi, Fa) : plus menaçant.
+BOSS_THEME = (
+    (40, MINOR_ARPEGGIO),
+    (41, MAJOR_ARPEGGIO),
+    (40, MINOR_ARPEGGIO),
+    (38, MINOR_ARPEGGIO),
+)
 BARS_PER_CHORD = 2
 
+Theme = tuple[tuple[int, tuple[int, ...]], ...]
 
-def make_music_loop(synth: Synth, bpm: float) -> Samples:
+
+def make_music_loop(synth: Synth, bpm: float, theme: Theme = MAIN_THEME) -> Samples:
     """Boucle synthwave de 8 mesures : basse, arpège, grosse caisse, caisse claire, charleston.
 
     Chaque son différent n'est calculé qu'une fois (dictionnaire `cache`), puis recopié
@@ -202,8 +233,7 @@ def make_music_loop(synth: Synth, bpm: float) -> Samples:
 
     out: Samples = []
     bar_length = 4 * beat
-    for chord_index, root in enumerate(MUSIC_ROOTS):
-        arpeggio = MINOR_ARPEGGIO if chord_index == 0 else MAJOR_ARPEGGIO
+    for chord_index, (root, arpeggio) in enumerate(theme):
         for bar in range(BARS_PER_CHORD):
             bar_start = (chord_index * BARS_PER_CHORD + bar) * bar_length
             for step in range(8):  # croches : basse et charleston
@@ -221,6 +251,6 @@ def make_music_loop(synth: Synth, bpm: float) -> Samples:
                     add_at(out, snare, at)
 
     # Longueur exacte de 8 mesures, pour que la boucle retombe pile sur le temps.
-    total = s.length(len(MUSIC_ROOTS) * BARS_PER_CHORD * bar_length)
+    total = s.length(len(theme) * BARS_PER_CHORD * bar_length)
     out = out[:total] + [0.0] * (total - len(out))
     return normalize(out, 0.9)

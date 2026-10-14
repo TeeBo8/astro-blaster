@@ -7,7 +7,7 @@ from pygame.math import Vector2
 
 from astro_blaster import config
 from astro_blaster.context import GameContext
-from astro_blaster.difficulty import difficulty_at
+from astro_blaster.director import Director, Stage
 from astro_blaster.entities.bullet import Bullet
 from astro_blaster.entities.meteor import LARGE, Meteor, spawn_meteors
 from astro_blaster.entities.powerup import PowerUp, PowerUpKind, roll_drop
@@ -19,6 +19,7 @@ from astro_blaster.fx.popups import Popups
 from astro_blaster.geometry import circles_overlap
 from astro_blaster.input import read_controls
 from astro_blaster.scenes.base import Scene
+from astro_blaster.scenes.boss_fight import BossFight
 from astro_blaster.scenes.game_over import GameOverScene
 from astro_blaster.scoring import Score, format_points
 
@@ -38,7 +39,8 @@ class PlayScene:
         self.meteors: list[Meteor] = []
         self.powerups: list[PowerUp] = []
         self.score = Score()
-        self.elapsed = 0.0
+        self.elapsed = 0.0  # durée totale de la partie (affichée au game over)
+        self.director = Director(stage_time=context.start_time)
         self.spawn_timer = config.SPAWN_FIRST_DELAY
         self.paused = False
         self.death_time: float | None = None  # None tant que le vaisseau est en vie
@@ -52,6 +54,8 @@ class PlayScene:
         # Le monde est dessiné à part, puis posé sur l'écran avec le décalage du tremblement :
         # l'interface (score, vies) reste immobile.
         self.world = pygame.Surface(SCREEN_SIZE)
+        self.boss_fight = BossFight(self)
+        context.audio.play_music("main")
 
     @property
     def ship_alive(self) -> bool:
@@ -80,11 +84,18 @@ class PlayScene:
             if self.death_time >= config.DEATH_DURATION:
                 return GameOverScene(self.context, self.score.points, self.elapsed)
             dt *= config.DEATH_TIME_SCALE
+        elif self.boss_fight.boss_dying:
+            dt *= config.BOSS_DEATH_TIME_SCALE  # ralenti pendant l'agonie du boss
 
         self.elapsed += dt
-        difficulty = difficulty_at(self.elapsed)
-        self.context.starfield.update(dt, difficulty.intensity)
-        self._spawn(dt)
+        match self.director.update(dt):
+            case Stage.WARNING:
+                self.boss_fight.start_warning()
+            case Stage.BOSS:
+                self.boss_fight.spawn_boss(self.director.cycle)
+        self.context.starfield.update(dt, self.director.difficulty.intensity)
+        if self.director.spawns_meteors:
+            self._spawn(dt)
 
         if self.ship_alive:
             new_bullets = self.ship.update(dt, read_controls())
@@ -95,6 +106,7 @@ class PlayScene:
 
         for entity in (*self.bullets, *self.meteors, *self.powerups):
             entity.update(dt)
+        self.boss_fight.update(dt)
         self.particles.update(dt)
         self.popups.update(dt)
 
@@ -110,13 +122,15 @@ class PlayScene:
     def _spawn(self, dt: float) -> None:
         self.spawn_timer -= dt
         if self.spawn_timer <= 0:
-            difficulty = difficulty_at(self.elapsed)
+            difficulty = self.director.difficulty
             self.meteors += spawn_meteors(difficulty, self.rng)
             self.spawn_timer += difficulty.spawn_interval
 
     def _collide_bullets(self) -> None:
         fragments: list[Meteor] = []
         for bullet in self.bullets:
+            if self.boss_fight.bullet_hits_boss(bullet):
+                continue
             for meteor in self.meteors:
                 if not meteor.alive or not circles_overlap(
                     bullet.position, bullet.radius, meteor.position, meteor.radius
@@ -160,20 +174,25 @@ class PlayScene:
     def _collide_ship(self) -> None:
         ship = self.ship
         for meteor in self.meteors:
-            if not meteor.alive or not circles_overlap(
+            if meteor.alive and circles_overlap(
                 ship.position, ship.radius, meteor.position, meteor.radius
             ):
-                continue
-            result = ship.hit()
-            if result is HitResult.IGNORED:
+                if self._hurt_ship() is not HitResult.IGNORED:
+                    meteor.alive = False
+                    self.particles.explosion(meteor.position, meteor.color, meteor.visual_radius)
                 return
-            meteor.alive = False
-            self.particles.explosion(meteor.position, meteor.color, meteor.visual_radius)
-            if result is HitResult.SHIELD_BROKEN:
-                self.particles.ring(ship.position, config.SHIELD_COLOR, config.SHIELD_RADIUS * 3)
-                self.shake.add(0.4)
-                self.audio.play("shield_break")
-                return
+        if self.boss_fight.threatens(ship.position, ship.radius) is not None:
+            self._hurt_ship()
+
+    def _hurt_ship(self) -> HitResult:
+        """Le vaisseau encaisse un choc : le bouclier saute, ou une vie est perdue."""
+        ship = self.ship
+        result = ship.hit()
+        if result is HitResult.SHIELD_BROKEN:
+            self.particles.ring(ship.position, config.SHIELD_COLOR, config.SHIELD_RADIUS * 3)
+            self.shake.add(0.4)
+            self.audio.play("shield_break")
+        elif result is HitResult.DAMAGED:
             self.score.break_combo()
             self.shake.add(config.SHIP_HIT_SHAKE)
             self.flash.trigger(config.SHIP_HIT_FLASH, config.DANGER_COLOR)
@@ -181,7 +200,7 @@ class PlayScene:
             self.audio.play("ship_hit")
             if ship.lives <= 0:
                 self._destroy_ship()
-            return
+        return result
 
     def _destroy_ship(self) -> None:
         self.death_time = 0.0
@@ -213,10 +232,11 @@ class PlayScene:
                 self._detonate_bomb()
 
     def _detonate_bomb(self) -> None:
-        """Détruit toutes les météorites à l'écran (sans morceaux ni bonus)."""
+        """Détruit toutes les météorites et les projectiles à l'écran, et abîme le boss."""
         for meteor in self.meteors:
             if meteor.alive:
                 self._destroy_meteor(meteor, split=False)
+        self.boss_fight.bomb()
         self.particles.ring(self.ship.position, config.BOMB_COLOR, config.BOMB_RING_RADIUS, 0.7)
         self.flash.trigger(config.BOMB_FLASH, config.BOMB_COLOR)
         self.shake.add(config.BOMB_SHAKE)
@@ -228,8 +248,11 @@ class PlayScene:
     def draw(self, surface: pygame.Surface) -> None:
         world = self.world
         self.context.starfield.draw(world)
-        for entity in (*self.powerups, *self.meteors, *self.bullets):
+        for entity in (*self.powerups, *self.meteors):
             entity.draw(world)
+        self.boss_fight.draw_world(world)
+        for bullet in self.bullets:
+            bullet.draw(world)
         if self.ship_alive:
             self.ship.draw(world)
         self.particles.draw(world)
@@ -239,6 +262,7 @@ class PlayScene:
         surface.blit(world, self.shake.offset())
         self.flash.draw(surface)
         self._draw_hud(surface)
+        self.boss_fight.draw_overlay(surface)
         if self.paused:
             self._draw_pause(surface)
 

@@ -34,7 +34,9 @@ class Fonts:
 
 
 class GameContext:
-    def __init__(self, save_path: Path | None = None) -> None:
+    def __init__(self, save_path: Path | None = None, start_time: float = 0.0) -> None:
+        # start_time : pour s'entraîner, commencer la partie plus tard (option --boss).
+        self.start_time = start_time
         self.audio = Audio()
         self.fonts = Fonts.load()
         # Un seul fond étoilé pour tout le jeu : il continue de défiler entre les écrans.

@@ -12,7 +12,7 @@ from astro_blaster.scenes.title import TitleScene
 
 
 class Game:
-    def __init__(self) -> None:
+    def __init__(self, start_time: float = 0.0) -> None:
         # Réglages du son à donner AVANT pygame.init() : mono, 16 bits, petit tampon
         # (un petit tampon = moins de délai entre l'action et le son).
         pygame.mixer.pre_init(config.SAMPLE_RATE, -16, 1, 512)
@@ -23,7 +23,7 @@ class Game:
             (config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SCALED | pygame.RESIZABLE
         )
         self.clock = pygame.time.Clock()
-        self.context = GameContext()
+        self.context = GameContext(start_time=start_time)
         self.bloom = Bloom(self.screen.get_size())
         self.show_fps = False
 

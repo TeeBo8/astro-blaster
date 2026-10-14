@@ -25,8 +25,8 @@
 - [x] Écran titre, record sauvegardé
 
 ## Phase 3 - Le boss (`feat/boss`)
-- [ ] Alerte « WARNING », boss en 3 phases, barre de vie
-- [ ] Mort spectaculaire, cycles plus durs après le boss
+- [x] Alerte « WARNING », boss en 3 phases, barre de vie
+- [x] Mort spectaculaire, cycles plus durs après le boss (+1 vie offerte)
 
 ## Phase 4 - Publication
 - [ ] Version navigateur (pygbag), record dans le stockage du navigateur

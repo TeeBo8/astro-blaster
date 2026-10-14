@@ -66,3 +66,9 @@ def test_corrupted_save_file_is_ignored(tmp_path: Path, content: str) -> None:
     path = tmp_path / "record.json"
     path.write_text(content, encoding="utf-8")
     assert load_high_score(path) == 0
+
+
+def test_bonus_points_ignore_combo() -> None:
+    score = Score(combo=config.COMBO_STEP * 3)
+    score.add_bonus(1000)
+    assert score.points == 1000
