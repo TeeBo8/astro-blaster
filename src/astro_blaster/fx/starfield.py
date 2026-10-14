@@ -8,7 +8,7 @@ import random
 from dataclasses import dataclass
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.fx import neon
@@ -62,7 +62,7 @@ class Starfield:
         return image
 
     def update(self, dt: float, intensity: float = 0.0) -> None:
-        self.boost = 1.0 + min(intensity, 1.5) * config.STAR_DIFFICULTY_BOOST
+        self.boost = 1.0 + intensity * config.STAR_DIFFICULTY_BOOST
         for star in self.stars:
             star.position.y += star.speed * self.boost * dt
             if star.position.y > config.SCREEN_HEIGHT:

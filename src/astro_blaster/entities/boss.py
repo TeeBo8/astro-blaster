@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.config import Color
@@ -49,6 +49,12 @@ TURRET_OFFSETS = (Vector2(-92, 16), Vector2(92, 16))
 TURRET_RADIUS = 14.0
 START_Y = -120.0
 DOWN = 90.0  # angle « vers le bas » : dans pygame, y augmente vers le bas
+
+
+class LaserState(Enum):
+    IDLE = auto()
+    CHARGING = auto()  # trait d'avertissement : le joueur a le temps de s'écarter
+    FIRING = auto()
 
 
 class BossHit(Enum):
@@ -105,6 +111,10 @@ class Timer:
         if self.remaining > 0:
             return False
         self.remaining += self.interval
+        # Après une image très lente, on oublie le retard au lieu de tirer à chaque image
+        # pour le rattraper.
+        if self.remaining <= 0:
+            self.remaining = self.interval
         return True
 
 
@@ -138,7 +148,7 @@ class Boss:
         self.spiral_timer = Timer(config.SPIRAL_INTERVAL, first_delay=0.0)
         self.rage_fan_timer = Timer(config.RAGE_FAN_INTERVAL)
         self.spiral_angle = 0.0
-        self.laser_state = "idle"  # idle → charging → firing → idle
+        self.laser_state = LaserState.IDLE  # IDLE → CHARGING → FIRING → IDLE
         self.laser_time = config.LASER_COOLDOWN
         self.laser_direction = 1
 
@@ -188,13 +198,15 @@ class Boss:
         if self.transition_time > 0:
             self.transition_time -= dt
             return []
-        # Plus le boss est agressif, plus ses minuteurs défilent vite : il tire plus souvent.
-        dt *= self.aggression
+        # Plus le boss est agressif, plus ses minuteurs de tir défilent vite.
+        hurried = dt * self.aggression
         if self.phase == 1:
-            return self._phase_one(dt, target)
+            return self._phase_one(hurried, target)
         if self.phase == 2:
-            return self._phase_two(dt, target)
-        return self._phase_three(dt, target)
+            return self._phase_two(hurried, target)
+        # Le laser garde son rythme : l'avertissement doit toujours laisser le temps de fuir.
+        self._update_laser(dt)
+        return self._phase_three(hurried)
 
     def _move(self, dt: float) -> None:
         amplitude, frequency = config.BOSS_SWAY
@@ -236,7 +248,7 @@ class Boss:
             for arm in range(config.SPIRAL_ARMS)
         ]
 
-    def _phase_three(self, dt: float, target: Vector2) -> list[EnemyBullet]:
+    def _phase_three(self, dt: float) -> list[EnemyBullet]:
         bullets: list[EnemyBullet] = []
         if self.rage_fan_timer.tick(dt):
             bullets += fan(
@@ -245,27 +257,30 @@ class Boss:
                 config.FAN_SPREAD * 1.4,
                 config.ENEMY_BULLET_SPEED * 1.15,
             )
-        self.laser_time -= dt
-        if self.laser_time <= 0:
-            if self.laser_state == "idle":
-                self.laser_state, self.laser_time = "charging", config.LASER_CHARGE_TIME
-            elif self.laser_state == "charging":
-                self.laser_state, self.laser_time = "firing", config.LASER_FIRE_TIME
-            else:
-                self.laser_state, self.laser_time = "idle", config.LASER_COOLDOWN
-                self.laser_direction *= -1  # le balayage suivant part de l'autre côté
         return bullets
+
+    def _update_laser(self, dt: float) -> None:
+        self.laser_time -= dt
+        if self.laser_time > 0:
+            return
+        if self.laser_state is LaserState.IDLE:
+            self.laser_state, self.laser_time = LaserState.CHARGING, config.LASER_CHARGE_TIME
+        elif self.laser_state is LaserState.CHARGING:
+            self.laser_state, self.laser_time = LaserState.FIRING, config.LASER_FIRE_TIME
+        else:
+            self.laser_state, self.laser_time = LaserState.IDLE, config.LASER_COOLDOWN
+            self.laser_direction *= -1  # le balayage suivant part de l'autre côté
 
     def laser_beam(self) -> tuple[Vector2, Vector2] | None:
         """Le rayon (début, fin) s'il est en train de tirer, sinon None."""
-        if self.laser_state != "firing" or self.dying:
+        if self.laser_state is not LaserState.FIRING or self.dying:
             return None
         progress = 1 - self.laser_time / config.LASER_FIRE_TIME
         return self._laser_segment(progress)
 
     def laser_warning(self) -> tuple[Vector2, Vector2] | None:
         """Le trait d'avertissement pendant la charge : il montre où le rayon va partir."""
-        if self.laser_state != "charging" or self.dying:
+        if self.laser_state is not LaserState.CHARGING or self.dying:
             return None
         return self._laser_segment(0.0)
 
@@ -284,13 +299,13 @@ class Boss:
         self.flash_time = config.BOSS_HIT_FLASH_TIME
         if self.health == 0:
             self.dying_time = 0.0
-            self.laser_state = "idle"
+            self.laser_state = LaserState.IDLE
             return BossHit.KILLED
         new_phase = phase_for(self.health_ratio)
         if new_phase > self.phase:
             self.phase = new_phase
             self.transition_time = config.BOSS_PHASE_TRANSITION_TIME
-            self.laser_state, self.laser_time = "idle", config.LASER_COOLDOWN / 2
+            self.laser_state, self.laser_time = LaserState.IDLE, config.LASER_COOLDOWN / 2
             return BossHit.PHASE_CHANGED
         return BossHit.DAMAGED
 
@@ -298,7 +313,8 @@ class Boss:
         """Teste un tir du joueur contre le boss. None si le tir ne touche rien."""
         if circles_overlap(point, radius, self.core_position, CORE_RADIUS):
             return self.damage(1)
-        for turret in self.turrets:
+        # Les tourelles s'activent en phase 2 : avant, elles font partie du blindage.
+        for turret in self.turrets if self.phase >= 2 else ():
             if turret.alive and circles_overlap(
                 point, radius, self.position + turret.offset, TURRET_RADIUS
             ):

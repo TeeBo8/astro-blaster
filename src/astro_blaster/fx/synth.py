@@ -190,7 +190,7 @@ MAIN_THEME = (
     (48, MAJOR_ARPEGGIO),
     (43, MAJOR_ARPEGGIO),
 )
-# Thème du boss : tout en mineur, avec un demi-ton qui grince (Mi, Fa) : plus menaçant.
+# Thème du boss : surtout en mineur, avec un demi-ton qui grince (Mi, Fa) : plus menaçant.
 BOSS_THEME = (
     (40, MINOR_ARPEGGIO),
     (41, MAJOR_ARPEGGIO),

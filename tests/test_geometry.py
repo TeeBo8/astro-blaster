@@ -1,7 +1,7 @@
 import random
 
 import pytest
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster.geometry import (
     circles_overlap,

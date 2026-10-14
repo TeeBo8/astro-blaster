@@ -12,11 +12,11 @@ import math
 from typing import TYPE_CHECKING
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.config import Color
-from astro_blaster.entities.boss import Boss, BossHit
+from astro_blaster.entities.boss import Boss, BossHit, LaserState
 from astro_blaster.entities.bullet import Bullet, EnemyBullet
 from astro_blaster.fx import neon
 from astro_blaster.geometry import circles_overlap, distance_to_segment
@@ -37,7 +37,7 @@ class BossFight:
         self.enemy_bullets: list[EnemyBullet] = []
         self.warning_age: float | None = None  # None quand aucune alerte n'est en cours
         self.explosion_timer = 0.0
-        self.seen_laser_state = "idle"
+        self.seen_laser_state = LaserState.IDLE
         self.banner: tuple[str, Color] | None = None
         self.banner_time = 0.0
 
@@ -55,7 +55,7 @@ class BossFight:
     def spawn_boss(self, cycle: int) -> None:
         self.warning_age = None
         self.boss = Boss(cycle)
-        self.seen_laser_state = "idle"
+        self.seen_laser_state = LaserState.IDLE
         self.scene.audio.play_music("boss")
         self.scene.audio.play("roar")
         self.scene.shake.add(0.5)
@@ -86,9 +86,9 @@ class BossFight:
         """Joue les sons du laser quand il change d'état, et fait trembler pendant le tir."""
         if boss.laser_state != self.seen_laser_state:
             self.seen_laser_state = boss.laser_state
-            if boss.laser_state == "charging":
+            if boss.laser_state is LaserState.CHARGING:
                 self.scene.audio.play("laser_charge")
-            elif boss.laser_state == "firing":
+            elif boss.laser_state is LaserState.FIRING:
                 self.scene.audio.play("laser_beam")
         if boss.laser_beam() is not None:
             self.scene.shake.add(0.9 * dt)
@@ -120,7 +120,7 @@ class BossFight:
         bonus = config.BOSS_SCORE * (scene.director.cycle + 1)
         scene.score.add_bonus(bonus)
         scene.popups.add(f"+{bonus}", core, config.ACCENT_COLOR)
-        if scene.ship.lives < config.SHIP_MAX_LIVES:
+        if scene.ship_alive and scene.ship.lives < config.SHIP_MAX_LIVES:
             scene.ship.lives += 1
             scene.popups.add("+1 VIE", scene.ship.position, config.SHIP_COLOR)
         self.show_banner("VAISSEAU-MÈRE DÉTRUIT", config.ACCENT_COLOR)
@@ -204,7 +204,10 @@ class BossFight:
             self._react(result, self.boss.core_position)
 
     def threatens(self, position: Vector2, radius: float) -> Vector2 | None:
-        """Ce qui touche le vaisseau (projectile, laser, coque). Renvoie l'endroit du choc."""
+        """Ce qui touche le vaisseau (projectile ou laser). Renvoie l'endroit du choc.
+
+        Le vaisseau ne monte jamais assez haut pour heurter la coque du boss.
+        """
         for bullet in self.enemy_bullets:
             if circles_overlap(position, radius, bullet.position, bullet.radius):
                 bullet.alive = False
@@ -217,8 +220,6 @@ class BossFight:
             beam is not None
             and distance_to_segment(position, *beam) < config.LASER_WIDTH / 2 + radius
         ):
-            return position
-        if boss.touches(position, radius):
             return position
         return None
 

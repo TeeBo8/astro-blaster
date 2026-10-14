@@ -28,10 +28,8 @@ def intensity_at(elapsed: float, cycle: int = 0) -> float:
     À partir du 2e cycle (après un boss), on ne repart plus de 0 mais d'un cran plus haut.
     """
     start = min(cycle * config.CYCLE_START_INTENSITY, config.CYCLE_START_INTENSITY_MAX)
-    progress = max(elapsed, 0.0) / config.DIFFICULTY_RAMP_DURATION
-    if progress <= 1.0:
-        return start + (1.0 - start) * progress**config.DIFFICULTY_CURVE_EXPONENT
-    return 1.0 + (progress - 1.0) * config.DIFFICULTY_OVERDRIVE_SLOPE
+    progress = min(max(elapsed, 0.0) / config.DIFFICULTY_RAMP_DURATION, 1.0)
+    return start + (1.0 - start) * progress**config.DIFFICULTY_CURVE_EXPONENT
 
 
 def difficulty_at(elapsed: float, cycle: int = 0) -> Difficulty:
@@ -41,8 +39,8 @@ def difficulty_at(elapsed: float, cycle: int = 0) -> Difficulty:
     meteor_speed = lerp(config.METEOR_SPEED_START, config.METEOR_SPEED_END, intensity)
     return Difficulty(
         intensity=intensity,
-        spawn_interval=max(spawn_interval, config.SPAWN_INTERVAL_MIN),
-        meteor_speed=min(meteor_speed, config.METEOR_SPEED_MAX),
+        spawn_interval=spawn_interval,
+        meteor_speed=meteor_speed,
         size_weights=(
             1.0,
             progress_between(intensity, *config.MEDIUM_METEOR_RAMP),

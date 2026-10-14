@@ -1,5 +1,5 @@
 import pytest
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.entities.boss import (
@@ -7,6 +7,7 @@ from astro_blaster.entities.boss import (
     TURRET_OFFSETS,
     Boss,
     BossHit,
+    LaserState,
     Timer,
     aimed,
     fan,
@@ -87,8 +88,43 @@ def test_only_the_core_takes_damage() -> None:
     assert boss.absorb_bullet(Vector2(0, config.SCREEN_HEIGHT), 3) is None
 
 
+def enter_phase(boss: Boss, phase: int) -> None:
+    """Abîme le boss juste assez pour entrer dans la phase voulue, puis attend la transition."""
+    threshold = config.BOSS_PHASE_THRESHOLDS[phase - 2]
+    boss.damage(boss.health - int(boss.max_health * threshold))
+    boss.update(config.BOSS_PHASE_TRANSITION_TIME + 0.01, PLAYER)
+    assert boss.phase == phase
+
+
+def test_timer_forgets_backlog_after_a_very_slow_frame() -> None:
+    timer = Timer(0.1)
+    assert timer.tick(5.0)  # image très lente : un seul tir
+    assert not timer.tick(0.01)  # pas de rafale de rattrapage à l'image suivante
+
+
+def test_turrets_are_armor_during_phase_one() -> None:
+    boss = arrived_boss()
+    assert boss.absorb_bullet(boss.position + TURRET_OFFSETS[0], 3) is BossHit.ARMOR
+    assert all(turret.alive for turret in boss.turrets)
+
+
+def test_laser_warning_keeps_its_length_in_later_cycles() -> None:
+    boss = arrived_boss(cycle=6)
+    enter_phase(boss, 2)
+    enter_phase(boss, 3)
+    step = 1 / 60
+    while boss.laser_state is not LaserState.CHARGING:
+        boss.update(step, PLAYER)
+    warning = 0.0
+    while boss.laser_state is LaserState.CHARGING:
+        boss.update(step, PLAYER)
+        warning += step
+    assert warning == pytest.approx(config.LASER_CHARGE_TIME, abs=2 * step)
+
+
 def test_turret_can_be_destroyed() -> None:
     boss = arrived_boss()
+    enter_phase(boss, 2)
     turret_position = boss.position + TURRET_OFFSETS[0]
     for _ in range(config.TURRET_HEALTH - 1):
         assert boss.absorb_bullet(turret_position, 3) is BossHit.TURRET_DAMAGED

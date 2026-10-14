@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.config import Color
@@ -82,7 +82,7 @@ class Bloom:
     def apply(self, surface: pygame.Surface) -> None:
         for small, spare, radius, iterations, strength in self.passes:
             pygame.transform.smoothscale(surface, small.get_size(), dest_surface=small)
-            # Deux flous « boîte » à la suite ressemblent beaucoup à un flou gaussien,
+            # Un flou « boîte » répété ressemble beaucoup à un flou gaussien,
             # pour 5 à 10 fois moins cher.
             for _ in range(iterations):
                 pygame.transform.box_blur(small, radius, dest_surface=spare)

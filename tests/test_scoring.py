@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 
 from astro_blaster import config
-from astro_blaster.scoring import Score, format_points, load_high_score, save_high_score
+from astro_blaster.scoring import Score, format_points
+from astro_blaster.storage import load_high_score, save_high_score
 
 
 def test_first_kills_count_once() -> None:

@@ -6,7 +6,7 @@ Ce sont eux qui font « sentir » les chocs, bien plus que les dessins.
 import random
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.config import Color

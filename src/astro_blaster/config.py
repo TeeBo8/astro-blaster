@@ -1,6 +1,7 @@
 """Tous les réglages du jeu, au même endroit.
 
-Changer une valeur ici suffit : aucun autre fichier ne contient de « nombre magique ».
+Équilibrage, vitesses, couleurs, son : tout se règle ici. Seuls quelques petits détails de
+dessin (décalages, épaisseurs) restent à côté du code qui dessine.
 Unités : pixels, secondes, pixels par seconde, degrés.
 """
 
@@ -165,16 +166,13 @@ METEOR_BURST_SPACING = 40.0  # décalage vertical entre les météorites d'une r
 
 DIFFICULTY_RAMP_DURATION = 150.0
 DIFFICULTY_CURVE_EXPONENT = 1.8
-DIFFICULTY_OVERDRIVE_SLOPE = 0.4  # au-delà, l'intensité continue de monter, plus lentement
 
 SPAWN_FIRST_DELAY = 1.0
 SPAWN_INTERVAL_START = 1.3
 SPAWN_INTERVAL_END = 0.32
-SPAWN_INTERVAL_MIN = 0.18
 
 METEOR_SPEED_START = 85.0
 METEOR_SPEED_END = 260.0
-METEOR_SPEED_MAX = 380.0
 METEOR_SPEED_SPREAD = 0.25  # ± 25 % autour de la vitesse du moment
 
 # Apparition progressive des moyennes, des grosses, des zigzags et des rafales :
@@ -184,7 +182,7 @@ LARGE_METEOR_RAMP = (0.2, 0.7)
 LARGE_METEOR_MAX_WEIGHT = 0.9
 ZIGZAG_RAMP = (0.5, 1.0)
 ZIGZAG_MAX_CHANCE = 0.35
-BURST_RAMP = (0.75, 1.2)
+BURST_RAMP = (0.75, 1.0)
 BURST_MAX_CHANCE = 0.25
 
 # --- Score -------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@ import pygame
 from astro_blaster import config
 from astro_blaster.fx.audio import Audio
 from astro_blaster.fx.starfield import Starfield
-from astro_blaster.scoring import default_save_path, load_high_score, save_high_score
+from astro_blaster.storage import RecordStore, default_store
 
 FONTS_DIR = Path(__file__).parent / "assets" / "fonts"
 
@@ -34,20 +34,20 @@ class Fonts:
 
 
 class GameContext:
-    def __init__(self, save_path: Path | None = None, start_time: float = 0.0) -> None:
+    def __init__(self, store: RecordStore | None = None, start_time: float = 0.0) -> None:
         # start_time : pour s'entraîner, commencer la partie plus tard (option --boss).
         self.start_time = start_time
         self.audio = Audio()
         self.fonts = Fonts.load()
         # Un seul fond étoilé pour tout le jeu : il continue de défiler entre les écrans.
         self.starfield = Starfield(random.Random())
-        self.save_path = save_path or default_save_path()
-        self.high_score = load_high_score(self.save_path)
+        self.store = store if store is not None else default_store()
+        self.high_score = self.store.load()
 
     def submit_score(self, score: int) -> bool:
         """Enregistre le score s'il bat le record. Renvoie True si c'est un nouveau record."""
         if score <= self.high_score:
             return False
         self.high_score = score
-        save_high_score(self.save_path, score)
+        self.store.save(score)
         return True

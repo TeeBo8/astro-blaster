@@ -1,9 +1,9 @@
-"""Petits textes qui montent et s'effacent : « +100 », « TIR TRIPLE », « x3 »…"""
+"""Petits textes qui montent et s'effacent : « +100 », « TIR TRIPLE », « +1 VIE »…"""
 
 from dataclasses import dataclass
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.config import Color

@@ -10,7 +10,7 @@ def test_intensity_starts_at_zero_and_reaches_one() -> None:
 
 
 def test_intensity_keeps_rising() -> None:
-    times = [0, 10, 30, 60, 90, 120, 150, 200, 300, 600]
+    times = [0, 10, 30, 60, 90, 120, 150]
     values = [intensity_at(t) for t in times]
     assert values == sorted(values)
     assert len(set(values)) == len(values)
@@ -47,10 +47,12 @@ def test_all_threats_present_at_full_intensity() -> None:
     assert late.burst_chance > 0
 
 
-def test_limits_hold_even_after_a_very_long_game() -> None:
+def test_intensity_is_capped_at_one() -> None:
+    assert intensity_at(60 * 60) == 1
     endless = difficulty_at(60 * 60)
-    assert endless.spawn_interval == config.SPAWN_INTERVAL_MIN
-    assert endless.meteor_speed == config.METEOR_SPEED_MAX
+    assert endless.spawn_interval == pytest.approx(config.SPAWN_INTERVAL_END)
+    assert endless.meteor_speed == pytest.approx(config.METEOR_SPEED_END)
+    assert endless.burst_chance == pytest.approx(config.BURST_MAX_CHANCE)
 
 
 def test_each_cycle_starts_harder_but_still_ends_at_full_intensity() -> None:

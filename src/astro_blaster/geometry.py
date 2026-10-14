@@ -2,7 +2,7 @@
 
 import random
 
-from pygame.math import Vector2
+from pygame import Vector2
 
 
 def clamp(value: float, low: float, high: float) -> float:

@@ -29,8 +29,9 @@
 - [x] Mort spectaculaire, cycles plus durs après le boss (+1 vie offerte)
 
 ## Phase 4 - Publication
-- [ ] Version navigateur (pygbag), record dans le stockage du navigateur
-- [ ] README (GIF de démo, stack, commandes, crédits des assets)
+- [x] Version navigateur (pygbag), record dans le stockage du navigateur
+- [x] README (GIF de démo, stack, commandes, crédits des assets)
+- [ ] Licence du code (MIT ?) à choisir par Leture
 - [ ] Revue à froid
 - [ ] Repo GitHub public + description + sujets (Leture)
 - [ ] Page sur teebostudio.fr

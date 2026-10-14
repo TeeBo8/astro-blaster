@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.fx import neon

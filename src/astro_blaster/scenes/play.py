@@ -3,7 +3,7 @@
 import random
 
 import pygame
-from pygame.math import Vector2
+from pygame import Vector2
 
 from astro_blaster import config
 from astro_blaster.context import GameContext
@@ -79,6 +79,7 @@ class PlayScene:
         if self.hitstop.consume(dt):
             return None
 
+        self.elapsed += dt  # temps réel, avant tout ralenti
         if self.death_time is not None:
             self.death_time += dt
             if self.death_time >= config.DEATH_DURATION:
@@ -87,7 +88,6 @@ class PlayScene:
         elif self.boss_fight.boss_dying:
             dt *= config.BOSS_DEATH_TIME_SCALE  # ralenti pendant l'agonie du boss
 
-        self.elapsed += dt
         match self.director.update(dt):
             case Stage.WARNING:
                 self.boss_fight.start_warning()
@@ -181,7 +181,8 @@ class PlayScene:
                     meteor.alive = False
                     self.particles.explosion(meteor.position, meteor.color, meteor.visual_radius)
                 return
-        if self.boss_fight.threatens(ship.position, ship.radius) is not None:
+        # Invincible, le vaisseau est traversé par les tirs, comme par les météorites.
+        if not ship.is_invincible and self.boss_fight.threatens(ship.position, ship.radius):
             self._hurt_ship()
 
     def _hurt_ship(self) -> HitResult:
